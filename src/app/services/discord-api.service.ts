@@ -4,13 +4,12 @@ import { Observable } from 'rxjs';
 import { Profile } from '../models/discord-profile.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DiscordApiService {
+  urlDiscordApi: string = 'https://camilo404.azurewebsites.net/api/profile/';
 
-  urlDiscordApi: string = 'https://camilo404.azurewebsites.net/api/profile/863408310903635998'
-
-constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getDiscordUser(id: string): Observable<Profile> {
     return this.http.get<Profile>(this.urlDiscordApi + id);
