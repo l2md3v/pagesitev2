@@ -14,9 +14,10 @@ declare global {
 @Component({
   selector: 'app-card-profile',
   templateUrl: './card-profile.component.html',
-  styleUrls: ['./card-profile.component.scss'],
+  styleUrls: ['./card-profile.component.scss']
 })
 export class CardProfileComponent implements OnInit {
+
   userId = environment.discordId;
   userDataStatus = false;
   userData?: Profile;
@@ -27,13 +28,11 @@ export class CardProfileComponent implements OnInit {
   lanyardData!: Lanyard | null;
   lanyardActivities: Activity[] = [];
 
-  constructor(
-    private discordApiService: DiscordApiService,
-    private lanyardService: LanyardService
-  ) {}
+  constructor(private discordApiService: DiscordApiService, private lanyardService: LanyardService) { }
 
   ngOnInit(): void {
     this.getDiscordUserData();
+
     this.getLanyardData();
   }
 
@@ -44,27 +43,24 @@ export class CardProfileComponent implements OnInit {
         this.userData = data;
 
         // Change all the /n to <br>
-        this.userBioFormatted = this.userData.user_profile?.bio?.replace(
-          /\n/g,
-          '<br>'
-        );
+        this.userBioFormatted = this.userData.user_profile?.bio?.replace(/\n/g, '<br>');
 
         const themeColors = this.userData.user_profile?.theme_colors || [];
-        this.themesColor =
-          themeColors.length === 0
-            ? ['#5C5C5C', '#5C5C5C']
-            : themeColors.map(
-                (color) =>
-                  `#${color.toString(16).padStart(6, '0').toUpperCase()}`
-              );
+        if (themeColors.length === 0) {
+          this.themesColor = ['#5C5C5C', '#5C5C5C'];
+        } else {
+          // Convert the decimal color to hex
+          this.themesColor = themeColors.map((color) => {
+            return '#' + color.toString(16).padStart(6, '0').toUpperCase();
+          });
+        }
       },
       error: (error) => {
         this.userDataStatus = false;
         console.log(error);
-      },
-      complete: () => {
-        window.loadAtropos();
-      },
+      }
+    }).add(() => {
+      window.loadAtropos();
     });
   }
 
@@ -137,27 +133,24 @@ export class CardProfileComponent implements OnInit {
   }
 
   getActivityImageUrl(activity: Activity, asset?: string): string {
-    if (activity.id === 'custom') {
-      const { emoji } = activity;
-      if (emoji?.id) {
-        return `https://cdn.discordapp.com/emojis/${emoji.id}.${
-          emoji.animated ? 'gif' : 'png'
-        }`;
-      }
-      return `https://nyxcodeapi.onrender.com/discord/camilo404/avatar/${this.userId}`;
+    if(activity.id === 'custom') {
+      if(activity.emoji?.id) {
+        return `https://cdn.discordapp.com/emojis/${activity.emoji.id}.${activity.emoji.animated ? 'gif' : 'png'}`;
+      } else return `https://nyxcodeapi.onrender.com/discord/camilo404/avatar/${this.userId}`;
     } else if (asset && asset.startsWith('spotify:')) {
       const parts = asset.split(':');
       return `https://i.scdn.co/image/${parts[1]}`;
-    } else if (asset && asset.includes('https/')) {
+    } else if(asset && asset.search('https/') !== -1){
       const parts = asset.split('https/');
       return `https://${parts[1]}`;
     } else {
-      return `https://dcdn.dstn.to/app-icons/${activity.application_id}.png`;
+      return `https://dcdn.dstn.to/app-icons/${activity.application_id}.png`
     }
   }
 
   public sendMessage(): void {
     window.open(`https://discord.com/users/${this.userId}`, '_blank');
+
     this.message = '';
   }
 
