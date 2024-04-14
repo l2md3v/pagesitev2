@@ -4,13 +4,13 @@ import { Observable } from 'rxjs';
 import { Profile } from '../models/discord-profile.model';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class DiscordApiService {
-  urlDiscordApi: string =
-    'https://khaidev.cyclic.app/discord/info/profile/';
 
-  constructor(private http: HttpClient) {}
+  urlDiscordApi: string = 'https://khaidev.cyclic.app/api/profile/'
+
+constructor(private http: HttpClient) { }
 
   getDiscordUser(id: string): Observable<Profile> {
     return this.http.get<Profile>(this.urlDiscordApi + id);
