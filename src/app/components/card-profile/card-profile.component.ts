@@ -14,10 +14,9 @@ declare global {
 @Component({
   selector: 'app-card-profile',
   templateUrl: './card-profile.component.html',
-  styleUrls: ['./card-profile.component.scss']
+  styleUrls: ['./card-profile.component.scss'],
 })
 export class CardProfileComponent implements OnInit {
-
   userId = environment.discordId;
   userDataStatus = false;
   userData?: Profile;
@@ -28,7 +27,10 @@ export class CardProfileComponent implements OnInit {
   lanyardData!: Lanyard | null;
   lanyardActivities: Activity[] = [];
 
-  constructor(private discordApiService: DiscordApiService, private lanyardService: LanyardService) { }
+  constructor(
+    private discordApiService: DiscordApiService,
+    private lanyardService: LanyardService
+  ) {}
 
   ngOnInit(): void {
     this.getDiscordUserData();
@@ -37,31 +39,37 @@ export class CardProfileComponent implements OnInit {
   }
 
   public getDiscordUserData(): void {
-    this.discordApiService.getDiscordUser(this.userId).subscribe({
-      next: (data: Profile) => {
-        this.userDataStatus = true;
-        this.userData = data;
+    this.discordApiService
+      .getDiscordUser(this.userId)
+      .subscribe({
+        next: (data: Profile) => {
+          this.userDataStatus = true;
+          this.userData = data;
 
-        // Change all the /n to <br>
-        this.userBioFormatted = this.userData.user_profile?.bio?.replace(/\n/g, '<br>');
+          // Change all the /n to <br>
+          this.userBioFormatted = this.userData.user_profile?.bio?.replace(
+            /\n/g,
+            '<br>'
+          );
 
-        const themeColors = this.userData.user_profile?.theme_colors || [];
-        if (themeColors.length === 0) {
-          this.themesColor = ['#5C5C5C', '#5C5C5C'];
-        } else {
-          // Convert the decimal color to hex
-          this.themesColor = themeColors.map((color) => {
-            return '#' + color.toString(16).padStart(6, '0').toUpperCase();
-          });
-        }
-      },
-      error: (error) => {
-        this.userDataStatus = false;
-        console.log(error);
-      }
-    }).add(() => {
-      window.loadAtropos();
-    });
+          const themeColors = this.userData.user_profile?.theme_colors || [];
+          if (themeColors.length === 0) {
+            this.themesColor = ['#5C5C5C', '#5C5C5C'];
+          } else {
+            // Convert the decimal color to hex
+            this.themesColor = themeColors.map((color) => {
+              return '#' + color.toString(16).padStart(6, '0').toUpperCase();
+            });
+          }
+        },
+        error: (error) => {
+          this.userDataStatus = false;
+          console.log(error);
+        },
+      })
+      .add(() => {
+        window.loadAtropos();
+      });
   }
 
   public getLanyardData(): void {
@@ -80,42 +88,51 @@ export class CardProfileComponent implements OnInit {
             const { start } = activity.timestamps;
             if (start) {
               const startTime = new Date(start);
-              
+
               // Function to update time ago message
               const updateAgoMessage = () => {
                 const currentTime = new Date();
-                const timeDifference = currentTime.getTime() - startTime.getTime();
-        
+                const timeDifference =
+                  currentTime.getTime() - startTime.getTime();
+
                 const hours = Math.floor(timeDifference / (1000 * 60 * 60));
-                let minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+                let minutes = Math.floor(
+                  (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
+                );
                 let seconds = Math.floor((timeDifference % (1000 * 60)) / 1000); // Remove secondsPassed, calculate directly
-        
+
                 let timeAgoMessage = '';
-        
+
                 // If seconds exceed 60, increase minutes accordingly
                 if (seconds >= 60) {
                   seconds = seconds % 60; // Reset seconds
                   const extraMinutes = Math.floor(seconds / 60); // Calculate extra minutes
                   minutes += extraMinutes; // Increase minutes
                 }
-        
+
                 if (hours > 0) {
-                  timeAgoMessage += `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+                  timeAgoMessage += `${hours} ${
+                    hours === 1 ? 'hour' : 'hours'
+                  }`;
                 }
-        
+
                 if (minutes > 0) {
-                  timeAgoMessage += `${timeAgoMessage ? ' : ' : ''}${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+                  timeAgoMessage += `${timeAgoMessage ? ' : ' : ''}${minutes} ${
+                    minutes === 1 ? 'minute' : 'minutes'
+                  }`;
                 }
-        
+
                 if (seconds > 0) {
-                  timeAgoMessage += `${timeAgoMessage ? ' : ' : ''}${seconds} ${seconds === 1 ? 'second' : 'seconds'}`;
+                  timeAgoMessage += `${timeAgoMessage ? ' : ' : ''}${seconds} ${
+                    seconds === 1 ? 'second' : 'seconds'
+                  }`;
                 }
-        
+
                 return timeAgoMessage;
               };
-        
+
               activity.timestamps.start = updateAgoMessage() || '';
-              
+
               // Call updateAgoMessage() every second
               setInterval(() => {
                 if (activity.timestamps) {
@@ -132,19 +149,22 @@ export class CardProfileComponent implements OnInit {
     });
   }
 
-  ggetActivityImageUrl(activity: Activity, asset?: string): string {
-    if(activity.id === 'custom') {
-      if(activity.emoji?.id) {
-        return `https://cdn.discordapp.com/emojis/${activity.emoji.id}.${activity.emoji.animated ? 'gif' : 'png'}`;
-      } else return `https://khaidev.cyclic.app/api/avatar/${this.userId}`;
+  getActivityImageUrl(activity: Activity, asset?: string): string {
+    if (activity.id === 'custom') {
+      if (activity.emoji?.id) {
+        return `https://cdn.discordapp.com/emojis/${activity.emoji.id}.${
+          activity.emoji.animated ? 'gif' : 'png'
+        }`;
+      } else
+        return `https://khaidevapi.up.railway.app/api/avatar/${this.userId}`;
     } else if (asset && asset.startsWith('spotify:')) {
       const parts = asset.split(':');
       return `https://i.scdn.co/image/${parts[1]}`;
-    } else if(asset && asset.search('https/') !== -1){
+    } else if (asset && asset.search('https/') !== -1) {
       const parts = asset.split('https/');
       return `https://${parts[1]}`;
     } else {
-      return `https://dcdn.dstn.to/app-icons/${activity.application_id}.png`
+      return `https://dcdn.dstn.to/app-icons/${activity.application_id}.png`;
     }
   }
 
