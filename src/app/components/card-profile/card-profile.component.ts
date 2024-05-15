@@ -1,3 +1,4 @@
+
 import { Component, OnInit } from '@angular/core';
 import { DiscordApiService } from 'src/app/services/discord-api.service';
 import { Profile } from 'src/app/models/discord-profile.model';
@@ -14,23 +15,33 @@ declare global {
 @Component({
   selector: 'app-card-profile',
   templateUrl: './card-profile.component.html',
-  styleUrls: ['./card-profile.component.scss'],
+  styleUrls: ['./card-profile.component.scss']
 })
 export class CardProfileComponent implements OnInit {
+
+  intervals: Array<any> = [];
   userId = environment.discordId;
   userDataStatus = false;
   userData?: Profile;
   userBioFormatted?: string;
   themesColor: string[] = [];
+  parseInt = parseInt;
+  isImage = function isImage(url: string): Boolean {
+    const img = new Image();
+    var res = false;
+    img.onload = () => res = true;
+    img.src = url;
+    return res;
+  };
+  banner = this.isImage('url(https://khaidevapi.up.railway.app/api/banner/' + this.userId + ')') ? 'url(https://khaidevapi.up.railway.app/api/banner/' + this.userId + ')' : 'url(' + environment.banner + ')'
+
 
   message = '';
   lanyardData!: Lanyard | null;
   lanyardActivities: Activity[] = [];
+  statusColor: string = '#43b581';
 
-  constructor(
-    private discordApiService: DiscordApiService,
-    private lanyardService: LanyardService
-  ) {}
+  constructor(private discordApiService: DiscordApiService, private lanyardService: LanyardService) { }
 
   ngOnInit(): void {
     this.getDiscordUserData();
@@ -39,37 +50,23 @@ export class CardProfileComponent implements OnInit {
   }
 
   public getDiscordUserData(): void {
-    this.discordApiService
-      .getDiscordUser(this.userId)
-      .subscribe({
-        next: (data: Profile) => {
-          this.userDataStatus = true;
-          this.userData = data;
+    this.discordApiService.getDiscordUser(this.userId).subscribe({
+      next: (data: Profile) => {
+        this.userDataStatus = true;
+        this.userData = data;
 
-          // Change all the /n to <br>
-          this.userBioFormatted = this.userData.user_profile?.bio?.replace(
-            /\n/g,
-            '<br>'
-          );
+        // Change all the /n to <br>
+        this.userBioFormatted = this.userData.user_profile?.bio?.replace(/\n/g, '<br>');
 
-          const themeColors = this.userData.user_profile?.theme_colors || [];
-          if (themeColors.length === 0) {
-            this.themesColor = ['#5C5C5C', '#5C5C5C'];
-          } else {
-            // Convert the decimal color to hex
-            this.themesColor = themeColors.map((color) => {
-              return '#' + color.toString(16).padStart(6, '0').toUpperCase();
-            });
-          }
-        },
-        error: (error) => {
-          this.userDataStatus = false;
-          console.log(error);
-        },
-      })
-      .add(() => {
-        window.loadAtropos();
-      });
+        this.themesColor = this.userData.user_profile?.theme_colors?.map(e => `#${e.toString(16).padStart(6, '0')}`) || environment.theme_colors;
+      },
+      error: (error) => {
+        this.userDataStatus = false;
+        console.log(error);
+      }
+    }).add(() => {
+      window.loadAtropos();
+    });
   }
 
   public getLanyardData(): void {
@@ -78,68 +75,88 @@ export class CardProfileComponent implements OnInit {
     this.lanyardService.getLanyardData().subscribe({
       next: (data) => {
         this.lanyardData = data;
-        console.log(this.lanyardData);
 
         this.lanyardActivities = this.lanyardData.d?.activities || [];
+
+        this.intervals.forEach((interval) => {
+          clearInterval(interval);
+        });
+
+        // Get the status color to apply to the platform svg
+        switch (this.lanyardData.d?.discord_status) {
+          case 'online':
+            this.statusColor = '#43b581';
+            break;
+          case 'idle':
+            this.statusColor = '#faa61a';
+            break;
+          case 'dnd':
+            this.statusColor = '#f04747';
+            break;
+          case 'offline':
+            this.statusColor = '#747f8d';
+            break;
+          case 'streaming':
+            this.statusColor = '#593695';
+            break;
+          case 'invisible':
+            this.statusColor = '#747f8d';
+            break;
+          case 'unknown':
+            this.statusColor = '#747f8d';
+            break;
+          default:
+            this.statusColor = '#747f8d';
+            break;
+        }
 
         // Format the timestamps of the activities
         this.lanyardActivities.forEach((activity) => {
           if (activity.timestamps) {
             const { start } = activity.timestamps;
-            if (start) {
-              const startTime = new Date(start);
+            const startTime = new Date(start);
 
-              // Function to update time ago message
-              const updateAgoMessage = () => {
-                const currentTime = new Date();
-                const timeDifference =
-                  currentTime.getTime() - startTime.getTime();
+            // Function to update time ago message
+            const updateAgoMessage = () => {
+              const currentTime = new Date();
+              const timeDifference = currentTime.getTime() - startTime.getTime();
 
-                const hours = Math.floor(timeDifference / (1000 * 60 * 60));
-                let minutes = Math.floor(
-                  (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
-                );
-                let seconds = Math.floor((timeDifference % (1000 * 60)) / 1000); // Remove secondsPassed, calculate directly
+              const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+              let minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+              let seconds = Math.floor((timeDifference % (1000 * 60)) / 1000); // Remove secondsPassed, calculate directly
 
-                let timeAgoMessage = '';
+              let timeAgoMessage = '';
 
-                // If seconds exceed 60, increase minutes accordingly
-                if (seconds >= 60) {
-                  seconds = seconds % 60; // Reset seconds
-                  const extraMinutes = Math.floor(seconds / 60); // Calculate extra minutes
-                  minutes += extraMinutes; // Increase minutes
-                }
+              // If seconds exceed 60, increase minutes accordingly
+              if (seconds >= 60) {
+                seconds = seconds % 60; // Reset seconds
+                const extraMinutes = Math.floor(seconds / 60); // Calculate extra minutes
+                minutes += extraMinutes; // Increase minutes
+              }
 
-                if (hours > 0) {
-                  timeAgoMessage += `${hours} ${
-                    hours === 1 ? 'hour' : 'hours'
-                  }`;
-                }
+              if (hours > 0) {
+                timeAgoMessage += `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+              }
 
-                if (minutes > 0) {
-                  timeAgoMessage += `${timeAgoMessage ? ' : ' : ''}${minutes} ${
-                    minutes === 1 ? 'minute' : 'minutes'
-                  }`;
-                }
+              if (minutes > 0) {
+                timeAgoMessage += `${timeAgoMessage ? ' : ' : ''}${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+              }
 
-                if (seconds > 0) {
-                  timeAgoMessage += `${timeAgoMessage ? ' : ' : ''}${seconds} ${
-                    seconds === 1 ? 'second' : 'seconds'
-                  }`;
-                }
+              if (seconds > 0) {
+                timeAgoMessage += `${timeAgoMessage ? ' : ' : ''}${seconds} ${seconds === 1 ? 'second' : 'seconds'}`;
+              }
 
-                return timeAgoMessage;
-              };
+              return timeAgoMessage;
+            };
 
-              activity.timestamps.start = updateAgoMessage() || '';
+            activity.timestamps.start = updateAgoMessage() || '';
 
-              // Call updateAgoMessage() every second
-              setInterval(() => {
-                if (activity.timestamps) {
-                  activity.timestamps.start = updateAgoMessage() || '';
-                }
-              }, 1000);
-            }
+            // Call updateAgoMessage() every second
+            this.intervals.push(setInterval(() => {
+              if (activity.timestamps) {
+                activity.timestamps.start = updateAgoMessage() || '';
+              }
+            }, 1000));
           }
         });
       },
@@ -152,11 +169,8 @@ export class CardProfileComponent implements OnInit {
   getActivityImageUrl(activity: Activity, asset?: string): string {
     if (activity.id === 'custom') {
       if (activity.emoji?.id) {
-        return `https://cdn.discordapp.com/emojis/${activity.emoji.id}.${
-          activity.emoji.animated ? 'gif' : 'png'
-        }`;
-      } else
-        return `https://khaidevapi.up.railway.app/api/avatar/${this.userId}`;
+        return `https://cdn.discordapp.com/emojis/${activity.emoji.id}.${activity.emoji.animated ? 'gif' : 'png'}`;
+      } else return `https://khaidevapi.up.railway.app/api/avatar/${this.userId}`;
     } else if (asset && asset.startsWith('spotify:')) {
       const parts = asset.split(':');
       return `https://i.scdn.co/image/${parts[1]}`;
@@ -164,7 +178,7 @@ export class CardProfileComponent implements OnInit {
       const parts = asset.split('https/');
       return `https://${parts[1]}`;
     } else {
-      return `https://dcdn.dstn.to/app-icons/${activity.application_id}.png`;
+      return `https://dcdn.dstn.to/app-icons/${activity.application_id}.png`
     }
   }
 
