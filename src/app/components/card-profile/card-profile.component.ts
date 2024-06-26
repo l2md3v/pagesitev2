@@ -1,4 +1,3 @@
-
 import { Component, OnInit } from '@angular/core';
 import { DiscordApiService } from 'src/app/services/discord-api.service';
 import { Profile } from 'src/app/models/discord-profile.model';
@@ -20,11 +19,13 @@ declare global {
 export class CardProfileComponent implements OnInit {
 
   intervals: Array<any> = [];
+  environment = environment;
   userId = environment.discordId;
   userDataStatus = false;
   userData?: Profile;
   userBioFormatted?: string;
   themesColor: string[] = [];
+  avatarDecorationAsset: string = '';
   parseInt = parseInt;
   isImage = function isImage(url: string): Boolean {
     const img = new Image();
@@ -33,9 +34,9 @@ export class CardProfileComponent implements OnInit {
     img.src = url;
     return res;
   };
-  banner = this.isImage('url(https://khaidevapi.up.railway.app/api/banner/' + this.userId + ')') ? 'url(https://khaidevapi.up.railway.app/api/banner/' + this.userId + ')' : 'url(' + environment.banner + ')'
 
-
+  banner: string = '';
+  
   message = '';
   lanyardData!: Lanyard | null;
   lanyardActivities: Activity[] = [];
@@ -47,6 +48,14 @@ export class CardProfileComponent implements OnInit {
     this.getDiscordUserData();
 
     this.getLanyardData();
+
+    setInterval(() => {
+      const profileEffectIntro = document.getElementById('profileEffectIntro');
+      if (profileEffectIntro) {
+        profileEffectIntro.setAttribute('src', '');
+        profileEffectIntro.setAttribute('src', environment.profile_effect.intro);
+      }
+    }, 60000);
   }
 
   public getDiscordUserData(): void {
@@ -59,6 +68,10 @@ export class CardProfileComponent implements OnInit {
         this.userBioFormatted = this.userData.user_profile?.bio?.replace(/\n/g, '<br>');
 
         this.themesColor = this.userData.user_profile?.theme_colors?.map(e => `#${e.toString(16).padStart(6, '0')}`) || environment.theme_colors;
+
+        this.avatarDecorationAsset = this.userData.user?.avatar_decoration_data?.asset || environment.avatar_decoration;
+
+        this.banner = `url(${this.userData.user?.banner ? `https://cdn.discordapp.com/banners/${this.userId}/${this.userData.user.banner}?size=2048` : environment.banner})`;
       },
       error: (error) => {
         this.userDataStatus = false;
