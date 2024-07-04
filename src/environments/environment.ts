@@ -4,7 +4,7 @@ export const environment = {
   "avatar_decoration": "a_3c97a2d37f433a7913a1c7b7a735d000",
   "theme_colors": ['#000000', '#ff0000'],
   "profile_effect": {
-    "intro": "https://raw.githubusercontent.com/l2md3v/archive/master/intro.png",
-    "loop": "https://raw.githubusercontent.com/l2md3v/archive/master/loop.png",
+    "intro": "https://raw.githubusercontent.com/l2md3v/archive/master/intro1.png",
+    "loop": "https://raw.githubusercontent.com/l2md3v/archive/master/loop1.png",
   }
 };

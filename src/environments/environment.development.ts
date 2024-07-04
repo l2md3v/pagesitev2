@@ -4,7 +4,7 @@ export const environment = {
   "avatar_decoration": "a_3c97a2d37f433a7913a1c7b7a735d000",
   "theme_colors": ['#000000', '#ff0000'],
   "profile_effect": {
-    "intro": "https://cdn.discordapp.com/assets/profile_effects/effects/2023-10-5/shuriken/intro.png",
-    "loop": "https://cdn.discordapp.com/assets/profile_effects/effects/2e46d5d2d9e/shuriken/loop.png",
+    "intro": "https://cdn.discordapp.com/assets/profile_effects/effects/2024-03-21/ace/intro_fa545ec0.png",
+    "loop": "https://cdn.discordapp.com/assets/profile_effects/effects/2024-03-21/ace/idle_frame_83d027d7.png",
   }
 };
